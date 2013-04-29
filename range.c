@@ -77,15 +77,24 @@ int state_list_clean() {
 
 int main() {
 	unsigned int i;
+	/* Создаем напока пустой массив под множества состояний */
 	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
 	if (!state_list) 
 		return 3;
 	for (i = 0; i < LIST_SIZE; i++)
 		INIT_LIST_HEAD(&state_list[i]);
-	state_add(1, 10);
-	state_add(1, 5);
-	state_add(1, 3);
-	state_add(2, 11);
+	/* Создаем полное множество состояний, для начала - будет первым элементом массива */
+	for (i=1; i<=q; i++)
+		state_add(1, i);
+	/* Тестовый автоматик */
+	int ar[q][e];
+	ar[0][0]=2;
+	ar[0][1]=1;
+	ar[1][0]=2;
+	ar[1][1]=0;
+	ar[2][0]=1;
+	ar[2][1]=2;
+	/* Таки пробуем */
 	state_list_print();
 	state_list_clean();
 	state_list_print();
@@ -94,19 +103,12 @@ int main() {
 
 #if 0
 int main(void) {
-	int ar[q][e];
 	int i,j,k;
 	int w;
 	int tmp_z;
 	int *z;
 	int x;
 	int flag = 0;
-	ar[0][0]=2;
-	ar[0][1]=1;
-	ar[1][0]=2;
-	ar[1][1]=0;
-	ar[2][0]=1;
-	ar[2][1]=2;
 	//тестовый автоматик ^
 	
 	//search:

@@ -75,8 +75,26 @@ int state_list_clean() {
 				state_del(pos);
 }
 
+/* Проверяет, принадлежит ли состояние а текущему множеству состояний */
+int check_state(int a, int b, int c, int d) {
+	struct state *pos;
+	int flag1, flag2, flag3;
+	list_for_each_entry(pos, &state_list[d], list) { 
+		if(pos->q == a)
+			flag1 = 1;	
+		if(pos->q == b)
+			flag2 = 1;
+		if(pos->q == c)
+			flag3 = 1;
+	}
+	if( flag1 && flag2 && flag3 )
+		return 1;
+	else
+		return 0;
+}
 int main() {
-	unsigned int i;
+	unsigned int i,j,k;
+	int flag;
 	/* Создаем напока пустой массив под множества состояний */
 	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
 	if (!state_list) 
@@ -84,7 +102,7 @@ int main() {
 	for (i = 0; i < LIST_SIZE; i++)
 		INIT_LIST_HEAD(&state_list[i]);
 	/* Создаем полное множество состояний, для начала - будет первым элементом массива */
-	for (i=1; i<=q; i++)
+	for (i=0; i<q; i++)
 		state_add(1, i);
 	/* Тестовый автоматик */
 	int ar[q][e];
@@ -95,9 +113,25 @@ int main() {
 	ar[2][0]=1;
 	ar[2][1]=2;
 	/* Таки пробуем */
+	flag = 0;
+	for (k=0; k<e; k++)  //проход по букве
+		for(i=0; i<q; i++) //проход по парам
+			for(j=0; j<q; j++) {
+				if( (i!=j) && (ar[i][k] == ar[j][k]) && (check_state(i,j,k, 1))) {
+				//проверили, что по букве k пара (i,j) принадлежащая
+				//к текущему множесву состояний, сжимается к подходящему состоянию
+					flag = 1;
+					// надо сделать переход к новому множеству состояний
+					// и по идее оно могло как расшириться так и сузиться
+				}
+			}
+	if (flag) printf("пара найдена, работает вроде как ");
+
+	/*
 	state_list_print();
 	state_list_clean();
 	state_list_print();
+	*/
 	return 0;	
 }
 
@@ -112,10 +146,6 @@ int main(void) {
 	//тестовый автоматик ^
 	
 	//search:
-	for (k=0; k<e; k++)  //проход по букве
-		for(i=0; i<q; i++) //проход по парам
-			for(j=0; j<q; j++) {
-				if( (i!=j) && (ar[i][k] == ar[j][k])) {
 					w = k; 
 					flag = 1;
 					goto mark;

@@ -75,7 +75,7 @@ int state_list_clean() {
 				state_del(pos);
 }
 
-/* Проверяет, принадлежит ли состояние а текущему множеству состояний */
+/* Проверяет, принадлежат ли состояния a, b, c множеству d */
 int check_state(int a, int b, int c, int d) {
 	struct state *pos;
 	int flag1, flag2, flag3;
@@ -110,12 +110,34 @@ int new_state_set(int i, int j, int w) {
 	
 }
 
-/* Проверяет, одинаковы ли два множества
- * при том, что они нсортированы, способ жопский )*/
-void check_eq_set(struct list_head *a) {
+/* Находит размер множества */
+int sizeof_set(int i) {
+	int k = 0;
 	struct state *pos;
-	list_for_each_entry(pos, &a, list)
-		printf("%d", pos->q);
+	list_for_each_entry(pos, &state_list[i], list)
+		k++;
+	return k;
+}
+
+
+/* Проверяет, одинаковы ли два множества
+ * при том, что они нсортированы, способ таксе*/
+int check_eq_set(int i, int j) {
+	struct state *posI;
+	struct state *posJ;
+	int flag = 0;
+	if(sizeof_set(i) != sizeof_set(j))
+		return 0;
+	list_for_each_entry(posI, &state_list[i], list) {
+		list_for_each_entry(posJ, &state_list[j], list)
+			if(posI->q == posJ->q)
+				flag = 1;
+		if(!flag)
+			return 0;
+		flag = 0;
+	}
+	return 1;
+			
 }
 
 int main() {
@@ -154,9 +176,10 @@ int main() {
 				}
 			}
 	new_state_set(1,1,w);
-	if (flag) printf("пара найдена, работает вроде как ");
-	state_list_print();
-	check_eq_set(&state_list[1]);
+	if(check_eq_set(1,1))
+		printf("1 1 eq that's  ok");
+	else
+		printf("1 1 not eq NOT OK");
 	/*
 	state_list_print();
 	state_list_clean();

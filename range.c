@@ -92,9 +92,36 @@ int check_state(int a, int b, int c, int d) {
 	else
 		return 0;
 }
+
+/* Добавляет новое множество состояний, добавляя, или исключая букву w,
+ * также надо проверять, было ли уже такое множество 
+ * текущее множество - под индексом i, последнее - под j */
+int new_state_set(int i, int j, int w) {
+	int flag = 0;
+	struct state *pos;
+	list_for_each_entry(pos, &state_list[i], list) {
+		if(pos->q != w)
+		       	state_add(j+1, pos->q);
+		else
+			flag = 1;
+	}
+	if( !flag)
+		state_add(j+1, w);
+	
+}
+
+/* Проверяет, одинаковы ли два множества
+ * при том, что они нсортированы, способ жопский )*/
+void check_eq_set(struct list_head *a) {
+	struct state *pos;
+	list_for_each_entry(pos, &a, list)
+		printf("%d", pos->q);
+}
+
 int main() {
 	unsigned int i,j,k;
 	int flag;
+	int w;
 	/* Создаем напока пустой массив под множества состояний */
 	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
 	if (!state_list) 
@@ -113,6 +140,7 @@ int main() {
 	ar[2][0]=1;
 	ar[2][1]=2;
 	/* Таки пробуем */
+	state_list_print();
 	flag = 0;
 	for (k=0; k<e; k++)  //проход по букве
 		for(i=0; i<q; i++) //проход по парам
@@ -122,11 +150,13 @@ int main() {
 				//к текущему множесву состояний, сжимается к подходящему состоянию
 					flag = 1;
 					// надо сделать переход к новому множеству состояний
-					// и по идее оно могло как расшириться так и сузиться
+					w = k;			
 				}
 			}
+	new_state_set(1,1,w);
 	if (flag) printf("пара найдена, работает вроде как ");
-
+	state_list_print();
+	check_eq_set(&state_list[1]);
 	/*
 	state_list_print();
 	state_list_clean();

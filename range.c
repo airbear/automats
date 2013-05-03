@@ -150,7 +150,7 @@ int pair_list_clean() {
 /* Проверяет, принадлежат ли состояния a, b, c множеству d */
 int check_state(int a, int b, int c, int d) {
 	struct state *pos;
-	int flag1, flag2, flag3;
+	int flag1=0, flag2=0, flag3=0;
 	if(!list_empty(&state_list[d])) {
 		list_for_each_entry(pos, &state_list[d], list) { 
 			if(pos->q == a)
@@ -178,11 +178,10 @@ int new_state_set(unsigned int i, unsigned int j, unsigned int w) {
 		if (!check_state(q_tmp, q_tmp, q_tmp, j+1))
 				state_add(j+1, q_tmp);
 	}
-state_list_print();
-	if(check_eq(j))
+	if(check_eq(j+1))
 		return 1;
 	else {
-		state_list_del(j);
+		state_list_del(j+1);
 		return 0;
 	}
 }
@@ -198,41 +197,43 @@ int sizeof_set(unsigned int i) {
 
 
 /* Проверяет, одинаковы ли два множества
- * при том, что они нсортированы, способ таксе*/
+ * возвращает 0, если да*/
 int check_eq_set(int i, int j) {
 	struct state *posI;
 	struct state *posJ;
 	int flag = 0;
 	if(sizeof_set(i) != sizeof_set(j))
-		return 0;
+		return 1;
 	list_for_each_entry(posI, &state_list[i], list) {
 		list_for_each_entry(posJ, &state_list[j], list)
 			if(posI->q == posJ->q)
 				flag = 1;
 		if(!flag)
-			return 0;
+			return 1;
 		flag = 0;
 	}
-	return 1;
+	return 0;
 			
 }
 
-/* Проверяет, было ли уже такое множество */
+/* Проверяет, было ли уже такое множество 
+ * возвращает 0, если было*/
 int check_eq(int s) {
 	unsigned int i;
 	for(i=0; i<LIST_SIZE; i++) {
 		if(!list_empty(&state_list[i]))
-			if(check_eq_set(i,s))
+			if((i != s) && (!check_eq_set(i,s)))
 				return 0;
 	}
 	return 1;
 }
 
 /* Проверяет, была ли уже такая пара 
- * возвращает 1, если пары ещё не было, тюе можно по ней пройти
- * мб не оче логично */
+ * возвращает 1, если пары ещё не было, т.е можно по ней пройти */
 int check_pair(int q, int p, int s) {
 	struct pair *pos;
+	int flag = 0;
+	/*
 	if(!list_empty(pair_list))
 		list_for_each_entry(pos, pair_list, list) 
 			if((pos->state == s) && 
@@ -240,26 +241,33 @@ int check_pair(int q, int p, int s) {
 					 ((pos->p == q) && (pos->q==p))))
 				return 0;
 	return 1;
+	*/
+	if(!list_empty(pair_list))
+		list_for_each_entry(pos, pair_list, list) {
+			if((pos->p == p) || (pos->q == q))
+				flag = 1;
+			else if((pos->q ==p) || (pos->p == q))
+				flag = 1;
+			if(flag && (pos->state == s))
+				return 0;
+		}
+	return 1;
 }
 /* Все проверки для пары в кучу */
 int pair_approved(int q, int p, int letter, int state) {
-	if(arr[q][letter] != arr[p][letter] ) return 0; // пара сжимается
-	if(!check_state(q,p,arr[p][letter],state)) return 0;// пара и то, во что сжимается, принадлежат текущему S
-	if(!check_pair(q,p,state)) return 0; //переходили ли из этого S по этой паре раньше
+	if(q == p) {printf("q == p\n"); return 0;} 
+//	if(ar[q][letter] != ar[p][letter] ){printf("не сжимается\n"); return 0;} // пара сжимается
+	if(!check_state(q,p,p,state)) {printf("не Э \n"); return 0;} // пара  принадлежаит текущему S
+	if(!check_pair(q,p,state)) {printf("исп. эту пару уже\n"); return 0;} //переходили ли из этого S по этой паре раньше
 	return 1;
 }
 
 int main() {
 	unsigned int i,j,k;
 	int flag;
+	int range = 134;
 	unsigned int w, current_set, stuff; 
-/*	ar[0][0]=2;
-	ar[0][1]=1;
-	ar[1][0]=2;
-	ar[1][1]=0;
-	ar[2][0]=1;
-	ar[2][1]=2;
-*/
+	/* test subject */
 	ar[0][0]=1;
 	ar[0][1]=1;
 	ar[1][0]=2;
@@ -283,38 +291,48 @@ int main() {
 		state_add(1, i);
 	father[1] = 0;
 	current_set = 1;
-	stuff = 1;	
+	stuff = 1;	//на последнее не пустое множество в массиве
 
 	/* Now, MAGIC! */
-
-	/*
+	
+mark:
 	while(current_set != 0) {
 		flag = 0;
-		for (k=0; k<erty; k++) //обходим по букве
+		for (k=0; k<erty; k++) {
+			printf("проверяем букву %u\n", k);
 			for (i=0; i<qwerty; i++)
-				for(j=0; j< qwerty; j++) // обходим по парам
-	}
-*/
-/*
-	state_list_print();
-	flag = 0;
-	for (k=0; k<e; k++)  //проход по букве
-		for(i=0; i<q; i++) //проход по парам
-			for(j=0; j<q; j++) {
-				if( (i!=j) && (ar[i][k] == ar[j][k]) && (check_state(i,j,k, 1))) {
-				//проверили, что по букве k пара (i,j) принадлежащая
-				//к текущему множесву состояний, сжимается к подходящему состоянию
-					flag = 1;
-					// надо сделать переход к новому множеству состояний
-					w = k;			
+				for(j=0; j< qwerty; j++){ // обходим по парам
+					        printf("пара (%u,%u)\n",i,j);	
+					
+					if(pair_approved(i,j,k,current_set)) {
+						printf("	подходит\n");
+						if(new_state_set(current_set, stuff, k)) {
+							state_list_print();
+							stuff++;
+						        pair_add(i,j,current_set);	
+							father[stuff] = current_set;
+							current_set = stuff;
+							flag = 1;
+							pair_list_print();
+							printf("current_set:%u, stuff:%u\n", current_set, stuff);
+							goto mark;
+						}
+					}
 				}
-			}
-*/
-	/*
-	state_list_print();
-	state_list_clean();
-	state_list_print();
-	*/
+		}
+		if(!flag) {
+			printf("current was:%u ", current_set);
+			current_set = father[current_set];
+			printf("current now:%u \n", current_set);
+		}
+	}
+
+	for(i=1; i<LIST_SIZE; i++)
+		if(!list_empty(&state_list[i]))
+			if(sizeof_set(i) < range)
+				range = sizeof_set(i);
+	printf("range is %d\n",range);
+
 	return 0;	
 }
 

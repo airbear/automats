@@ -326,6 +326,7 @@ int main() {
 */
 	for (i=0; i<1000; i++) {
 		ar_random();
+		range();
 		cleanup();
 		init();
 	}

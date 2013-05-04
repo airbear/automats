@@ -15,7 +15,7 @@
 struct list_head *state_list;
 unsigned int father[LIST_SIZE];
 struct list_head *pair_list;
-	/* Тестовый автоматик */
+/* Тестовый автоматик */
 static unsigned int ar[qwerty][erty];
 
 /* Описание структуры состояния*/
@@ -69,7 +69,7 @@ struct pair *__pair_new() {
 	tmp = (struct pair *) malloc( sizeof(struct pair));
 	if(!tmp)
 		return NULL;
-	memset(tmp, sizeof(struct pair), 0);
+	memset(tmp, 0, sizeof(struct pair));
 }
 
 /* добавляет новое состояние в список */
@@ -96,14 +96,16 @@ struct pair *pair_add(int p, int s) {
 
 /* Вычищает состояние из памяти */
 int __state_erase(struct state *st) {
-	if (st)
+	if (st) {
 		free(st);
+	}
 	return 0;
 }
 /* Вычищает пару из памяти  */
 int __pair_erase(struct pair *st) {
-	if(st)
+	if(st) {
 		free(st);
+	}
 	return 0;
 }
 
@@ -166,7 +168,7 @@ int new_state_set(unsigned int i, unsigned int j, unsigned int w) {
 	list_for_each_entry(pos, &state_list[i], list) {
 		q_tmp = ar[pos->q][w];
 		if (!check_state(q_tmp, j+1))
-				state_add(j+1, q_tmp);
+			state_add(j+1, q_tmp);
 	}
 	if(check_eq(j+1))
 		return 1;
@@ -203,7 +205,7 @@ int check_eq_set(int i, int j) {
 		flag = 0;
 	}
 	return 0;
-			
+
 }
 
 /* Проверяет, было ли уже такое множество 
@@ -227,7 +229,7 @@ int check_pair(int p, int s) {
 			if((pos->state == s) && (pos->p == p))
 				return 0;
 	return 1;
-	
+
 }
 /* Все проверки для пары в кучу */
 int pair_approved(int p, int state) { 
@@ -240,14 +242,15 @@ void init() {
 	unsigned int i;
 	/* Создаем напока пустой массив под множества состояний */
 	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
-//	if (!state_list) 
-		//return 3;
+	//	if (!state_list) 
+	//return 3;
 	for (i = 0; i < LIST_SIZE; i++)
 		INIT_LIST_HEAD(&state_list[i]);
 	/* Пустой список пар */
 	pair_list = (struct list_head *) malloc(sizeof(*pair_list));
-//	if (!pair_list) 
-		//return 5;
+	
+	//	if (!pair_list) 
+	//return 5;
 	INIT_LIST_HEAD(pair_list);
 
 	/* Создаем полное множество состояний, для начала - будет первым элементом массива */
@@ -265,23 +268,23 @@ int range() {
 	stuff = 1;	//на последнее не пустое множество в массиве
 
 	/* Now, MAGIC! */
-	
+
 mark:
 	while(current_set != 0) {
 		flag = 0;
 		for (k=0; k<erty; k++) {
 			for (i=0; i<qwerty; i++) { // обходим по парам
-					if(pair_approved(k,current_set)) {
-						if(new_state_set(current_set, stuff, k)) {
-							stuff++;
-						        pair_add(k,current_set);	
-							father[stuff] = current_set;
-							current_set = stuff;
-							flag = 1;
-							goto mark;
-						}
+				if(pair_approved(k,current_set)) {
+					if(new_state_set(current_set, stuff, k)) {
+						stuff++;
+						pair_add(k,current_set);	
+						father[stuff] = current_set;
+						current_set = stuff;
+						flag = 1;
+						goto mark;
 					}
 				}
+			}
 		}
 		if(!flag) {
 			current_set = father[current_set];
@@ -310,27 +313,18 @@ void cleanup() {
 	pair_list_clean();
 	for(i=0; i<LIST_SIZE; i++)
 		father[i] = 0;
+	free(state_list);
+	free(pair_list);
 }
 
 int main() {
 	unsigned int i;
-	init();
-
-	/* test subject */
-/*	ar[0][0]=1;
-	ar[0][1]=0;
-	ar[1][0]=2;
-	ar[1][1]=0;
-	ar[2][0]=0;
-	ar[2][1]=2;
-*/
-	for (i=0; i<1000; i++) {
+	for (i = 0; i < 5000; i++) {
+		init();
 		ar_random();
 		range();
 		cleanup();
-		init();
 	}
-//	printf("range is %d\n", range());
 	return 0;	
 }
 

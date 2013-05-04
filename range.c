@@ -7,7 +7,7 @@
 /* Размер массива */
 #define LIST_SIZE 100000
 
-#define qwerty 3
+#define qwerty 10
 #define erty 2
 //static int q = 3,e = 2; //|Q|, |E|
 
@@ -235,34 +235,31 @@ int pair_approved(int p, int state) {
 	if(!check_pair(p,state)) { return 0;} //переходили ли из этого S по этой паре раньше
 	return 1;
 }
+/* Подготовительное */
+void init() {
+	unsigned int i;
+	/* Создаем напока пустой массив под множества состояний */
+	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
+//	if (!state_list) 
+		//return 3;
+	for (i = 0; i < LIST_SIZE; i++)
+		INIT_LIST_HEAD(&state_list[i]);
+	/* Пустой список пар */
+	pair_list = (struct list_head *) malloc(sizeof(*pair_list));
+//	if (!pair_list) 
+		//return 5;
+	INIT_LIST_HEAD(pair_list);
 
-int main() {
+	/* Создаем полное множество состояний, для начала - будет первым элементом массива */
+	for (i=0; i<qwerty; i++)
+		state_add(1, i);
+}
+/* Считает ранг, возвращает его  */
+int range() {
 	unsigned int i,j,k;
 	int flag;
 	int range = qwerty;
 	unsigned int w, current_set, stuff; 
-	/* test subject */
-	ar[0][0]=1;
-	ar[0][1]=1;
-	ar[1][0]=1;
-	ar[1][1]=2;
-	ar[2][0]=2;
-	ar[2][1]=0;
-	/* Создаем напока пустой массив под множества состояний */
-	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
-	pair_list = (struct list_head *) malloc(sizeof(*pair_list));
-
-	if (!pair_list) 
-		return 5;
-	INIT_LIST_HEAD(pair_list);
-	if (!state_list) 
-		return 3;
-	for (i = 0; i < LIST_SIZE; i++)
-		INIT_LIST_HEAD(&state_list[i]);
-	
-	/* Создаем полное множество состояний, для начала - будет первым элементом массива */
-	for (i=0; i<qwerty; i++)
-		state_add(1, i);
 	father[1] = 0;
 	current_set = 1;
 	stuff = 1;	//на последнее не пустое множество в массиве
@@ -274,10 +271,10 @@ mark:
 		flag = 0;
 		for (k=0; k<erty; k++) {
 			for (i=0; i<qwerty; i++) { // обходим по парам
-					if(pair_approved(i,current_set)) {
+					if(pair_approved(k,current_set)) {
 						if(new_state_set(current_set, stuff, k)) {
 							stuff++;
-						        pair_add(i,current_set);	
+						        pair_add(k,current_set);	
 							father[stuff] = current_set;
 							current_set = stuff;
 							flag = 1;
@@ -295,8 +292,44 @@ mark:
 		if(!list_empty(&state_list[i]))
 			if(sizeof_set(i) < range)
 				range = sizeof_set(i);
-	printf("range is %d\n",range);
+	return range;
+}
+/* Генерирует случайный автомат*/
+void ar_random() {
+	unsigned int i,j;
+	srand(time(NULL));
+	for(i=0; i<qwerty; i++)
+		for(j=0; j<erty; j++)
+			ar[i][j] = rand() % qwerty;
 
+}
+/* Подчищает */
+void cleanup() {
+	unsigned int i;
+	state_list_clean();
+	pair_list_clean();
+	for(i=0; i<LIST_SIZE; i++)
+		father[i] = 0;
+}
+
+int main() {
+	unsigned int i;
+	init();
+
+	/* test subject */
+/*	ar[0][0]=1;
+	ar[0][1]=0;
+	ar[1][0]=2;
+	ar[1][1]=0;
+	ar[2][0]=0;
+	ar[2][1]=2;
+*/
+	for (i=0; i<1000; i++) {
+		ar_random();
+		cleanup();
+		init();
+	}
+//	printf("range is %d\n", range());
 	return 0;	
 }
 

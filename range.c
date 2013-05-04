@@ -27,7 +27,6 @@ struct state {
 /* Описание структуры для "использованных" пар */
 struct pair {
 	int p;
-	int q;
 	int state; // из какого S переходили по этой паре 
 	struct list_head list;
 };
@@ -49,7 +48,7 @@ void pair_list_print() {
 	struct pair *pos;
 	if(! list_empty(pair_list)) 
 		list_for_each_entry(pos, pair_list, list) {
-			printf("(%d,%d) from state %d", pos->p, pos->q, pos->state);
+			printf("%d from state %d", pos->p, pos->state);
 			printf("\n");
 		}
 
@@ -84,13 +83,12 @@ struct state *state_add(int num, int q) {
 	return st;	
 }
 /* добавляет новую пару в список */
-struct pair *pair_add(int p, int q, int s) {
+struct pair *pair_add(int p, int s) {
 	struct pair *st;
 	st = __pair_new();
 	if(!st)
 		return NULL;
 	st->p = p;
-	st->q = q;
 	st->state = s;
 	list_add( &(st->list), pair_list);
 	return st;
@@ -147,24 +145,16 @@ int pair_list_clean() {
 			pair_del(pos);
 }
 
-/* Проверяет, принадлежат ли состояния a, b, c множеству d */
-int check_state(int a, int b, int c, int d) {
+/* Проверяет, принадлежит ли состояние а множеству d */
+int check_state(int a, int d) {
 	struct state *pos;
-	int flag1=0, flag2=0, flag3=0;
 	if(!list_empty(&state_list[d])) {
 		list_for_each_entry(pos, &state_list[d], list) { 
 			if(pos->q == a)
-				flag1 = 1;	
-			if(pos->q == b)
-				flag2 = 1;
-			if(pos->q == c)
-				flag3 = 1;
+				return 1;
 		}
 	}
-	if( flag1 && flag2 && flag3 )
-		return 1;
-	else
-		return 0;
+	return 0;
 }
 
 /* Добавляет новое множество состояний, 
@@ -175,7 +165,7 @@ int new_state_set(unsigned int i, unsigned int j, unsigned int w) {
 	unsigned int q_tmp;
 	list_for_each_entry(pos, &state_list[i], list) {
 		q_tmp = ar[pos->q][w];
-		if (!check_state(q_tmp, q_tmp, q_tmp, j+1))
+		if (!check_state(q_tmp, j+1))
 				state_add(j+1, q_tmp);
 	}
 	if(check_eq(j+1))
@@ -230,49 +220,33 @@ int check_eq(int s) {
 
 /* Проверяет, была ли уже такая пара 
  * возвращает 1, если пары ещё не было, т.е можно по ней пройти */
-int check_pair(int q, int p, int s) {
+int check_pair(int p, int s) {
 	struct pair *pos;
-	int flag = 0;
-	/*
 	if(!list_empty(pair_list))
 		list_for_each_entry(pos, pair_list, list) 
-			if((pos->state == s) && 
-					(((pos->p == p) && (pos->q==q)) ||
-					 ((pos->p == q) && (pos->q==p))))
+			if((pos->state == s) && (pos->p == p))
 				return 0;
 	return 1;
-	*/
-	if(!list_empty(pair_list))
-		list_for_each_entry(pos, pair_list, list) {
-			if((pos->p == p) || (pos->q == q))
-				flag = 1;
-			else if((pos->q ==p) || (pos->p == q))
-				flag = 1;
-			if(flag && (pos->state == s))
-				return 0;
-		}
-	return 1;
+	
 }
 /* Все проверки для пары в кучу */
-int pair_approved(int q, int p, int letter, int state) {
-	if(q == p) {printf("q == p\n"); return 0;} 
-//	if(ar[q][letter] != ar[p][letter] ){printf("не сжимается\n"); return 0;} // пара сжимается
-	if(!check_state(q,p,p,state)) {printf("не Э \n"); return 0;} // пара  принадлежаит текущему S
-	if(!check_pair(q,p,state)) {printf("исп. эту пару уже\n"); return 0;} //переходили ли из этого S по этой паре раньше
+int pair_approved(int p, int state) { 
+	if(!check_state(p,state)) {return 0;} // пара  принадлежаит текущему S
+	if(!check_pair(p,state)) { return 0;} //переходили ли из этого S по этой паре раньше
 	return 1;
 }
 
 int main() {
 	unsigned int i,j,k;
 	int flag;
-	int range = 134;
+	int range = qwerty;
 	unsigned int w, current_set, stuff; 
 	/* test subject */
 	ar[0][0]=1;
 	ar[0][1]=1;
-	ar[1][0]=2;
+	ar[1][0]=1;
 	ar[1][1]=2;
-	ar[2][0]=0;
+	ar[2][0]=2;
 	ar[2][1]=0;
 	/* Создаем напока пустой массив под множества состояний */
 	state_list = (struct list_head *) malloc(sizeof(*state_list) * LIST_SIZE);
@@ -299,31 +273,21 @@ mark:
 	while(current_set != 0) {
 		flag = 0;
 		for (k=0; k<erty; k++) {
-			printf("проверяем букву %u\n", k);
-			for (i=0; i<qwerty; i++)
-				for(j=0; j< qwerty; j++){ // обходим по парам
-					        printf("пара (%u,%u)\n",i,j);	
-					
-					if(pair_approved(i,j,k,current_set)) {
-						printf("	подходит\n");
+			for (i=0; i<qwerty; i++) { // обходим по парам
+					if(pair_approved(i,current_set)) {
 						if(new_state_set(current_set, stuff, k)) {
-							state_list_print();
 							stuff++;
-						        pair_add(i,j,current_set);	
+						        pair_add(i,current_set);	
 							father[stuff] = current_set;
 							current_set = stuff;
 							flag = 1;
-							pair_list_print();
-							printf("current_set:%u, stuff:%u\n", current_set, stuff);
 							goto mark;
 						}
 					}
 				}
 		}
 		if(!flag) {
-			printf("current was:%u ", current_set);
 			current_set = father[current_set];
-			printf("current now:%u \n", current_set);
 		}
 	}
 

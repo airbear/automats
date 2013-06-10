@@ -300,10 +300,11 @@ mark:
 /* Генерирует случайный автомат*/
 void ar_random() {
 	unsigned int i,j;
-	srand(time(NULL));
+//	srand(time(NULL));
 	for(i=0; i<qwerty; i++)
-		for(j=0; j<erty; j++)
+		for(j=0; j<erty; j++) {
 			ar[i][j] = rand() % qwerty;
+		}
 
 }
 /* Подчищает */
@@ -317,14 +318,25 @@ void cleanup() {
 	free(pair_list);
 }
 
+void print_automat() {
+	unsigned int i,j;
+	for(i = 0; i< qwerty; i++ ) {
+		for(j=0; j<erty; j++) 
+			printf("%d",ar[i][j]);
+		printf("\n");
+	}
+	printf("\n");
+}
 int main() {
 	unsigned int i;
-	for (i = 0; i < 5000; i++) {
+	srand(time(NULL));
+	for (i = 0; i < 1000000; i++) {
 		init();
 		ar_random();
-		range();
+		printf("%d\n", range());
 		cleanup();
 	}
+
 	return 0;	
 }
 

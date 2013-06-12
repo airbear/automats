@@ -7,7 +7,7 @@
 /* Размер массива */
 #define LIST_SIZE 100000
 
-#define qwerty 10
+#define qwerty 14
 #define erty 2
 //static int q = 3,e = 2; //|Q|, |E|
 
@@ -330,7 +330,7 @@ void print_automat() {
 int main() {
 	unsigned int i;
 	srand(time(NULL));
-	for (i = 0; i < 1000000; i++) {
+	for (i = 0; i < 300000; i++) {
 		init();
 		ar_random();
 		printf("%d\n", range());

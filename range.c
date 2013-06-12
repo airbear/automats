@@ -3,6 +3,8 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/sysinfo.h>
 
 /* Размер массива */
 #define LIST_SIZE 100000
@@ -17,12 +19,16 @@ unsigned int father[LIST_SIZE];
 struct list_head *pair_list;
 /* Тестовый автоматик */
 static unsigned int ar[qwerty][erty];
+static int cpu_count;
+static int thread_state[128];
+static pthread_t thread[128];
+static int iterator = 0;
 
 /* Описание структуры состояния*/
 struct state {
 	int q;
 	struct list_head list;
-};
+};	
 
 /* Описание структуры для "использованных" пар */
 struct pair {
@@ -30,6 +36,12 @@ struct pair {
 	int state; // из какого S переходили по этой паре 
 	struct list_head list;
 };
+
+/* Возвращает количество ядер процессоров */
+int get_cpu_count()
+{
+	return get_nprocs();
+}
 
 /* печатает все элементы массива */
 void state_list_print() {
@@ -268,13 +280,12 @@ int range() {
 	stuff = 1;	//на последнее не пустое множество в массиве
 
 	/* Now, MAGIC! */
-
 mark:
 	while(current_set != 0) {
 		flag = 0;
-		for (k=0; k<erty; k++) {
-			for (i=0; i<qwerty; i++) { // обходим по парам
-				if(pair_approved(k,current_set)) {
+		for (k=0; k<erty; k++) 
+			for (i=0; i<qwerty; i++)  // обходим по парам
+				if(pair_approved(k,current_set)) 
 					if(new_state_set(current_set, stuff, k)) {
 						stuff++;
 						pair_add(k,current_set);	
@@ -283,12 +294,8 @@ mark:
 						flag = 1;
 						goto mark;
 					}
-				}
-			}
-		}
-		if(!flag) {
+		if(!flag) 
 			current_set = father[current_set];
-		}
 	}
 
 	for(i=1; i<LIST_SIZE; i++)
@@ -297,6 +304,7 @@ mark:
 				range = sizeof_set(i);
 	return range;
 }
+
 /* Генерирует случайный автомат*/
 void ar_random() {
 	unsigned int i,j;
@@ -327,15 +335,47 @@ void print_automat() {
 	}
 	printf("\n");
 }
+
+void *worker(int cpu_id)
+{
+	thread_state[cpu_id] = 1;
+	iterator++;
+	init();
+	ar_random();
+	printf("%d\n", range());
+	cleanup();
+	thread_state[cpu_id] = 0;
+	return;
+}
+
+void *controller()
+{
+	int i;
+	for (i = 0; i < cpu_count-1; i++)
+		pthread_create(&thread[i], NULL, worker(i), NULL);
+	while (1) 
+		for (i = 0; i < cpu_count-1; i++) 
+			if (thread_state[i] == 0) 
+				pthread_join(thread[i], NULL);
+	return;
+}
+
 int main() {
 	unsigned int i;
+	cpu_count = get_cpu_count();
+	pthread_t main_controller;
 	srand(time(NULL));
+	printf("Segfault because usage of one array by all threads, just give them their own copy\n");
+	pthread_create(&main_controller, NULL, controller, NULL);
+	pthread_join(main_controller, NULL);
+#if 0
 	for (i = 0; i < 1000000; i++) {
 		init();
 		ar_random();
 		printf("%d\n", range());
 		cleanup();
 	}
+#endif
 
 	return 0;	
 }

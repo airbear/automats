@@ -185,15 +185,18 @@ int check_eq_set(int i, int j) {
 }
 
 /* Проверяет, было ли уже такое множество 
- * возвращает 0, если было*/
+ * возвращает номер множества в массиве, если было*/
 int check_eq(int s) {
-	unsigned int i;
+	unsigned int i,k;
 	for(i=0; i<LIST_SIZE; i++) {
 		if(!list_empty(&state_list[i]))
-			if((i != s) && (!check_eq_set(i,s)))
-				return 0;
+			if(i != s) 
+				if(!check_eq_set(i,s))
+					return 0;
+				else 
+					k=i;
 	}
-	return 1;
+	return k;
 }
 
 /* Проверяет, была ли уже такая пара 
